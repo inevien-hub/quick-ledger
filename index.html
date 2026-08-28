@@ -670,7 +670,9 @@ main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px;
         <button class="mine-item" id="btnRecurring"><span class="ic" data-ic="exchange"></span><span class="info">周期记账<span class="sub">每日 · 每周 · 每月自动记账</span></span><span class="arrow" data-ic="chevron-right"></span></button>
         <button class="mine-item" id="btnBudget"><span class="ic" data-ic="target"></span><span class="info">预算管理<span class="sub">月度总预算 · 分类预算 · 超支提醒</span></span><span class="arrow" data-ic="chevron-right"></span></button>
         <button class="mine-item" id="btnImport"><span class="ic" data-ic="download"></span><span class="info">导入数据<span class="sub">挖财 CSV 一键迁移</span></span><span class="arrow" data-ic="chevron-right"></span></button>
-        <button class="mine-item" id="btnExport"><span class="ic" data-ic="upload"></span><span class="info">导出备份<span class="sub">全量 CSV 下载</span></span><span class="arrow" data-ic="chevron-right"></span></button>
+        <button class="mine-item" id="btnExport"><span class="ic" data-ic="upload"></span><span class="info">导出流水<span class="sub">全量 CSV 下载 · Excel 可查看</span></span><span class="arrow" data-ic="chevron-right"></span></button>
+        <button class="mine-item" id="btnBakOut"><span class="ic" data-ic="upload"></span><span class="info">导出完整备份<span class="sub">JSON · 含记录与全部设置</span></span><span class="arrow" data-ic="chevron-right"></span></button>
+        <button class="mine-item" id="btnBakIn"><span class="ic" data-ic="download"></span><span class="info">导入完整备份<span class="sub">JSON · 配置还原 + 记录合并</span></span><span class="arrow" data-ic="chevron-right"></span></button>
         <button class="mine-item" id="btnTheme"><span class="ic" data-ic="palette"></span><span class="info">主题切换<span class="sub">护眼绿 · 静谧蓝 · 暖阳橙 · 暗夜</span></span><span class="arrow" data-ic="chevron-right"></span></button>
       </div>
       <div class="mine-group">
@@ -1920,6 +1922,96 @@ function exportCSV() {
   toast(`已导出 ${CACHE.length} 条记录`);
 }
 $("btnExport").onclick = exportCSV;
+
+/* ---------------- 完整备份（JSON：记录 + 全部设置） ---------------- */
+async function exportFullBackup() {
+  const records = await dbAll();
+  const bak = {
+    app: "sjs_ledger",
+    backupVersion: 1,
+    exportedAt: nowStr(),
+    accounts: accounts(),
+    initial: SET.initial || {},
+    budget: SET.budget || {},
+    recurrings: SET.recurrings || [],
+    records,
+  };
+  const blob = new Blob([JSON.stringify(bak, null, 1)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "随手记账备份_" + nowStr().slice(0, 10) + ".json";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(a.href), 500);
+  toast(`已导出完整备份（${records.length} 条记录 + 全部设置）`);
+}
+$("btnBakOut").onclick = exportFullBackup;
+
+/* 导入完整备份：配置还原（备份为准）+ 记录合并（id 去重，不删除现有） */
+let BAK_DATA = null;
+function openBackupInModal() {
+  BAK_DATA = null;
+  openModal("导入完整备份",
+    `<div class="tip">选择「随手记账备份_日期.json」文件，导入后：<br>① 还原账户 / 初始余额 / 预算 / 周期规则（以备份为准）<br>② 合并账本记录（按 id 去重，不删除现有数据）</div>
+     <input type="file" id="bakFile" accept=".json,application/json">
+     <div id="bakResult"></div>`,
+    "取消", "",
+    () => {});
+  $("bakFile").onchange = handleBackupFile;
+}
+function handleBackupFile(e) {
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  const rd = new FileReader();
+  rd.onload = () => {
+    try {
+      const data = JSON.parse(rd.result);
+      if (data.app !== "sjs_ledger" || !data.backupVersion) {
+        $("bakResult").innerHTML = `<div class="err">不是有效的备份文件（缺少应用标识）</div>`;
+        return;
+      }
+      BAK_DATA = data;
+      const existIds = new Set(CACHE.map(x => x.id));
+      const addN = (data.records || []).filter(x => !existIds.has(x.id)).length;
+      const ok = $("mOk");
+      ok.textContent = "确认导入";
+      ok.className = "m-btn primary";
+      MODAL_OK = confirmBackupRestore;
+      $("bakResult").innerHTML = `
+        <div class="imp-summary">
+          备份记录 <b>${(data.records || []).length}</b> 条 ｜ 将新增合并 <b>${addN}</b> 条（id 去重）<br>
+          配置还原：账户 ${(data.accounts || []).length} 个 · 初始余额 · 预算 · 周期规则 ${(data.recurrings || []).length} 条
+        </div>
+        <div class="tip">现有数据保留，配置补充为备份状态</div>`;
+    } catch (err) {
+      $("bakResult").innerHTML = `<div class="err">文件解析失败：${err.message}</div>`;
+    }
+  };
+  rd.readAsText(f);
+}
+async function confirmBackupRestore() {
+  const d = BAK_DATA;
+  if (!d) return;
+  // ① 配置以备份为准
+  if (Array.isArray(d.accounts) && d.accounts.length) SET.accounts = d.accounts;
+  if (d.initial && typeof d.initial === "object") SET.initial = d.initial;
+  if (d.budget && typeof d.budget === "object") SET.budget = d.budget;
+  if (Array.isArray(d.recurrings)) SET.recurrings = d.recurrings;
+  saveSettings(SET);
+  // ② 记录合并（id 去重）
+  const exist = new Set((await dbAll()).map(x => x.id));
+  let added = 0;
+  for (const rec of (d.records || [])) {
+    if (exist.has(rec.id)) continue;
+    await dbAdd(rec);
+    added++;
+  }
+  await refreshCache();
+  toast(`完整备份导入完成：新增记录 ${added} 条，配置已还原`);
+  renderBook(); renderList(); renderStat(); renderMine(); updateTopbar();
+}
+$("btnBakIn").onclick = openBackupInModal;
 
 /* =====================================================================
  * 我的页（账户 Bento 余额卡）
