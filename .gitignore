@@ -1,0 +1,14 @@
+# 忽略 IDE / 系统文件
+.idea/
+.vscode/
+*.swp
+*.swo
+Thumbs.db
+.DS_Store
+
+# 忽略本地测试 / 部署产物
+__pycache__/
+ledger_site/
+
+# 忽略工作区记忆与自动化配置（含敏感信息，勿上传）
+.workbuddy/
