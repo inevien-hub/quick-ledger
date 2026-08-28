@@ -1178,7 +1178,12 @@ async function doSave() {
   $("remarkInput").value = "";
   $("remarkHint").textContent = "点击添加备注（可选）";
   $("remarkHint").style.color = "";
+  await refreshCache();   // 统一刷新缓存（新增/编辑均生效，保证各视图实时）
   renderBook();
+  renderList();
+  renderStat();
+  renderMine();
+  updateTopbar();
   if (S.tab !== "book") switchTab("book");
 }
 
