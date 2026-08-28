@@ -785,6 +785,11 @@ const HOT_CATS = [
   ["餐饮","早餐","coffee"],["交通","停车费","parking"],["交通","打车","car"],
   ["娱乐","旅游度假","airplane"],["餐饮","夜宵","moon"],["餐饮","饮料水果","cup-soda"],["交通","加油","fuel"],
 ];
+/* 收入高频分类（与分类库「收入」大类 subs 保持一致） */
+const INCOME_CATS = [
+  ["收入","工资","banknote"],["收入","奖金","gift"],["收入","理财收益","trending-up"],
+  ["收入","礼金红包","wallet"],["收入","其他","folder"],
+];
 
 const TYPE_LABEL = { expense:"支出", income:"收入", transfer:"转账" };
 
@@ -1000,11 +1005,12 @@ function renderTransToChips() {
   });
 }
 
-/* Bento 分类网格：前 2 个为大格，其余小格，末尾全宽「更多分类」 */
+/* Bento 分类网格：按类型渲染（支出高频 / 收入高频），末尾全宽「更多分类」 */
 function renderCatGrid() {
   const grid = $("catGrid");
   grid.innerHTML = "";
-  HOT_CATS.forEach(([c1, c2, icn]) => {
+  const cats = S.type === "income" ? INCOME_CATS : HOT_CATS;
+  cats.forEach(([c1, c2, icn]) => {
     const b = document.createElement("button");
     b.className = "cat-btn" + (S.cat1 === c1 && S.cat2 === c2 ? " on" : "");
     b.innerHTML = `<span class="cic">${ic(icn)}</span><span class="nm">${c2}</span>`;
@@ -1066,8 +1072,8 @@ $("keypad").addEventListener("click", e => {
 document.querySelectorAll("#typeSeg button").forEach(b => {
   b.onclick = () => {
     S.type = b.dataset.type;
-    if (S.type === "income") { S.cat1 = "收入"; S.cat2 = "工资"; }
-    else if (S.type === "expense" && (S.cat1 === "收入" || S.cat1 === "转账")) { S.cat1 = "餐饮"; S.cat2 = "午餐"; }
+    if (S.type === "income") { S.cat1 = "收入"; S.cat2 = "工资"; S.drawerCat = "收入"; }
+    else if (S.type === "expense" && (S.cat1 === "收入" || S.cat1 === "转账")) { S.cat1 = "餐饮"; S.cat2 = "午餐"; S.drawerCat = "餐饮"; }
     renderBook();
   };
 });
