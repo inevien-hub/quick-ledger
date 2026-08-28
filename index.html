@@ -447,6 +447,26 @@ main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px;
 }
 .modal-box .m-body input:focus{border-color:var(--primary);}
 .modal-box .m-body .tip{font-size:11.5px;color:var(--text2);margin-top:6px;}
+/* 账户管理 */
+.acc-row .mini{font-size:12px;font-weight:600;color:var(--primary);background:var(--primary-soft);border:none;border-radius:9px;padding:7px 12px;flex-shrink:0;}
+.ic-pick{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:8px;}
+.ic-pick .ic-opt{height:44px;border-radius:11px;border:1px solid var(--border);background:var(--bg);color:var(--text2);display:flex;align-items:center;justify-content:center;}
+.ic-pick .ic-opt.on{border-color:var(--primary);color:var(--primary);background:var(--primary-soft);}
+.ic-pick .ic-opt svg{width:18px;height:18px;}
+/* 周期记账 */
+.rl-row{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--border);}
+.rl-row:last-child{border-bottom:none;}
+.rl-badge{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;font-weight:800;}
+.rl-main{flex:1;min-width:0;}
+.rl-title{font-size:13.5px;font-weight:700;display:flex;align-items:center;gap:6px;}
+.rl-sub{font-size:11px;color:var(--text2);margin-top:2px;}
+.rl-actions{display:flex;gap:6px;flex-shrink:0;}
+.rl-actions button{font-size:11.5px;font-weight:600;border:none;border-radius:8px;padding:6px 9px;}
+.rl-actions .on{background:var(--primary-soft);color:var(--primary);}
+.rl-actions .off{background:rgba(0,0,0,.05);color:var(--text2);}
+.rf-label{font-size:11.5px;font-weight:600;color:var(--text2);margin:10px 0 4px;}
+.rf-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.rf-grid input,.rf-grid select{width:100%;padding:9px 10px;border-radius:10px;border:1px solid var(--border);background:var(--bg);font-size:14px;color:var(--text);box-sizing:border-box;}
 .modal-box .m-body .err{color:var(--expense);font-size:13px;margin-top:8px;}
 .modal-box .m-body input[type="file"]{
   width:100%;margin-top:10px;font-size:13px;font-family:inherit;color:var(--text);
@@ -529,12 +549,7 @@ main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px;
       </div>
       <div class="acct-wrap">
         <span class="acct-ic" id="acctIc"></span>
-        <select id="acctSelect">
-          <option value="cash">现金</option>
-          <option value="deposit">存款</option>
-          <option value="gold">黄金</option>
-          <option value="fx">外汇(投资)</option>
-        </select>
+        <select id="acctSelect"></select>
       </div>
     </div>
 
@@ -651,6 +666,8 @@ main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px;
       </div>
       <div class="mine-group">
         <div class="title">功能设置</div>
+        <button class="mine-item" id="btnAccounts"><span class="ic" data-ic="wallet"></span><span class="info">账户管理<span class="sub">重命名 · 新增账户</span></span><span class="arrow" data-ic="chevron-right"></span></button>
+        <button class="mine-item" id="btnRecurring"><span class="ic" data-ic="exchange"></span><span class="info">周期记账<span class="sub">每日 · 每周 · 每月自动记账</span></span><span class="arrow" data-ic="chevron-right"></span></button>
         <button class="mine-item" id="btnBudget"><span class="ic" data-ic="target"></span><span class="info">预算管理<span class="sub">月度总预算 · 分类预算 · 超支提醒</span></span><span class="arrow" data-ic="chevron-right"></span></button>
         <button class="mine-item" id="btnImport"><span class="ic" data-ic="download"></span><span class="info">导入数据<span class="sub">挖财 CSV 一键迁移</span></span><span class="arrow" data-ic="chevron-right"></span></button>
         <button class="mine-item" id="btnExport"><span class="ic" data-ic="upload"></span><span class="info">导出备份<span class="sub">全量 CSV 下载</span></span><span class="arrow" data-ic="chevron-right"></span></button>
@@ -858,7 +875,12 @@ function loadSettings() {
 function saveSettings(s) { localStorage.setItem(SET_KEY, JSON.stringify(s)); }
 let SET = loadSettings();
 if (!SET.initial) SET.initial = {};
+/* 账户配置化：默认 4 账户首次初始化到 SET.accounts（id 固定，历史记录按 id 引用） */
+if (!SET.accounts || !SET.accounts.length) SET.accounts = ACCOUNTS.map(a => ({ ...a }));
+/* 周期记账规则集 */
+if (!SET.recurrings) SET.recurrings = [];
 function initialOf(accId) { return SET.initial[accId] || 0; }
+function accounts() { return SET.accounts && SET.accounts.length ? SET.accounts : ACCOUNTS; }
 
 /* ---------------- 全局状态 ---------------- */
 const S = {
@@ -905,7 +927,7 @@ function dayLabel(key) {
   if (key === yest) return "昨天";
   return `${parseInt(key.slice(5,7),10)}月${parseInt(key.slice(8,10),10)}日`;
 }
-function acctById(id) { return ACCOUNTS.find(a => a.id === id) || ACCOUNTS[0]; }
+function acctById(id) { return accounts().find(a => a.id === id) || accounts()[0] || ACCOUNTS[0]; }
 function catInfo(cat1, cat2) {
   const c1 = CATEGORIES.find(c => c.name === cat1);
   const hot = HOT_CATS.find(h => h[0] === cat1 && h[1] === cat2);
@@ -994,6 +1016,7 @@ function renderBook() {
   // 转账模式隐藏分类区（转账无分类概念，且省出空间保证一屏）
   $("catGrid").style.display = isTrans ? "none" : "flex";
   const acc = acctById(S.account);
+  renderAcctSelect();
   $("acctSelect").value = S.account;
   $("acctIc").innerHTML = ic(acc.icon);
   renderTransToChips();
@@ -1001,6 +1024,12 @@ function renderBook() {
   renderAmount();
   renderBudgetBar();
   updateDateLabel();
+}
+
+/* 账户下拉：按 SET.accounts 动态渲染（重命名/新增后自动跟随） */
+function renderAcctSelect() {
+  const sel = $("acctSelect");
+  sel.innerHTML = accounts().map(a => `<option value="${a.id}">${a.name}</option>`).join("");
 }
 
 $("acctSelect").onchange = e => {
@@ -1012,7 +1041,7 @@ $("acctSelect").onchange = e => {
 function renderTransToChips() {
   const box = $("transToChips");
   box.innerHTML = "";
-  const others = ACCOUNTS.filter(a => a.id !== S.account);
+  const others = accounts().filter(a => a.id !== S.account);
   if (!others.some(a => a.id === S.toAccount)) S.toAccount = others[0].id;
   others.forEach(a => {
     const b = document.createElement("button");
@@ -1896,15 +1925,15 @@ $("btnExport").onclick = exportCSV;
  * 我的页（账户 Bento 余额卡）
  * ===================================================================== */
 function renderMine() {
-  // 总资产汇总（四账户余额之和）
-  const total = ACCOUNTS.reduce((s, a) => s + balanceOf(a.id), 0);
+  // 总资产汇总（账户余额之和）
+  const total = accounts().reduce((s, a) => s + balanceOf(a.id), 0);
   const tv = $("totalAssetVal");
   if (tv) { tv.textContent = fmtMoney(total); tv.className = "ta-val" + (total < 0 ? " neg" : ""); }
   const ts = $("totalAssetSub");
-  if (ts) ts.textContent = ACCOUNTS.map(a => a.name).join(" · ");
+  if (ts) ts.textContent = accounts().map(a => a.name).join(" · ");
   const grid = $("acctGrid");
   grid.innerHTML = "";
-  ACCOUNTS.forEach(a => {
+  accounts().forEach(a => {
     const cnt = CACHE.filter(r => r.account === a.id || r.toAccount === a.id).length;
     const b = balanceOf(a.id);
     const cls = b >= 0 ? "inc" : "exp";
@@ -1940,6 +1969,318 @@ function openBalanceModal(accId) {
   );
   setTimeout(() => { const i = $("balInput"); if (i) i.focus(); }, 60);
 }
+
+/* ---------------- 账户管理（重命名 / 新增） ---------------- */
+const ACCOUNT_ICONS = ["wallet","bank","gem","landmark","coffee","car","home","airplane","shopping-bag","gamepad"];
+const ACCOUNT_COLORS = [
+  { acc:"#2e7d32", soft:"#e8f5e9" }, { acc:"#1565c0", soft:"#e3f2fd" }, { acc:"#b8860b", soft:"#fff8e1" }, { acc:"#6a1b9a", soft:"#f3e5f5" },
+  { acc:"#c62828", soft:"#ffebee" }, { acc:"#00695c", soft:"#e0f2f1" }, { acc:"#e65100", soft:"#fff3e0" }, { acc:"#283593", soft:"#e8eaf6" },
+];
+function openAccountsModal() {
+  const list = accounts().map(a => `
+    <div class="rl-row">
+      <span class="rl-badge" style="background:${a.soft};color:${a.acc};">${ic(a.icon)}</span>
+      <div class="rl-main">
+        <div class="rl-title">${a.name}</div>
+        <div class="rl-sub">余额 ${fmtMoney(balanceOf(a.id))}</div>
+      </div>
+      <div class="rl-actions"><button class="mini" data-rn="${a.id}">重命名</button></div>
+    </div>`).join("");
+  openModal("账户管理",
+    `<div style="max-height:300px;overflow-y:auto;">${list || "<div style='padding:14px;text-align:center;color:var(--text2);font-size:12px;'>暂无账户</div>"}</div>
+     <button id="addAccBtn" style="width:100%;margin-top:12px;padding:11px;border-radius:12px;background:var(--primary-soft);color:var(--primary);font-weight:700;border:1px dashed rgba(46,125,50,.4);">＋ 新增账户</button>`,
+    "关闭", "",
+    () => {});
+  document.querySelectorAll("[data-rn]").forEach(b => { b.onclick = () => renameAccountModal(b.dataset.rn); });
+  const ab = $("addAccBtn"); if (ab) ab.onclick = addAccountModal;
+}
+function renameAccountModal(id) {
+  const a = acctById(id);
+  openModal("重命名账户",
+    `<div>当前名称：<b>${a.name}</b></div>
+     <input id="rnInput" type="text" maxlength="8" placeholder="新名称" value="${a.name}">`,
+    "保存", "primary",
+    () => {
+      const nm = $("rnInput").value.trim();
+      if (!nm) { toast("名称不能为空"); return; }
+      if (accounts().some(x => x.id !== id && x.name === nm)) { toast("账户名已存在"); return; }
+      accounts().find(x => x.id === id).name = nm;
+      SET.accounts = accounts(); saveSettings(SET);
+      toast(`账户已重命名为「${nm}」，历史记录已同步`);
+      renderMine(); renderBook(); renderList(); renderStat();
+      openAccountsModal();
+    });
+  setTimeout(() => { const i = $("rnInput"); if (i) { i.focus(); i.select(); } }, 60);
+}
+function addAccountModal() {
+  let selIcon = ACCOUNT_ICONS[0];
+  const pick = ACCOUNT_ICONS.map((icn, i) =>
+    `<button class="ic-opt" data-icn="${icn}" ${i === 0 ? "on" : ""}>${ic(icn)}</button>`).join("");
+  openModal("新增账户",
+    `<div class="rf-label">账户名称</div>
+     <input id="naInput" type="text" maxlength="8" placeholder="如：支付宝 / 信用卡">
+     <div class="rf-label">选择图标</div>
+     <div class="ic-pick">${pick}</div>`,
+    "保存", "primary",
+    () => {
+      const nm = $("naInput").value.trim();
+      if (!nm) { toast("请输入账户名称"); return; }
+      if (accounts().some(x => x.name === nm)) { toast("账户名已存在"); return; }
+      const c = ACCOUNT_COLORS[accounts().length % ACCOUNT_COLORS.length];
+      accounts().push({ id: "acc_" + Date.now().toString(36), name: nm, icon: selIcon, acc: c.acc, soft: c.soft });
+      SET.accounts = accounts(); saveSettings(SET);
+      toast(`账户「${nm}」已创建`);
+      renderMine(); renderBook(); renderList(); renderStat();
+      openAccountsModal();
+    });
+  document.querySelectorAll(".ic-opt").forEach(b => { b.onclick = () => {
+    document.querySelectorAll(".ic-opt").forEach(x => x.classList.remove("on"));
+    b.classList.add("on"); selIcon = b.dataset.icn;
+  }; });
+  setTimeout(() => { const i = $("naInput"); if (i) i.focus(); }, 60);
+}
+$("btnAccounts").onclick = openAccountsModal;
+
+/* =====================================================================
+ * 周期记账（每日 / 每周 / 每月 自动记账）
+ * ===================================================================== */
+const DOW_CN = ["周日","周一","周二","周三","周四","周五","周六"];
+const PERIOD_CN = { daily:"每日", weekly:"每周", monthly:"每月" };
+function periodDesc(r) {
+  if (r.period === "daily") return "每日";
+  if (r.period === "weekly") return "每周 " + DOW_CN[r.dow % 7];
+  return "每月 " + r.dom + " 日";
+}
+function nextRunDate(r, from) {
+  const d = new Date(from + "T00:00:00");
+  const fmt = x => `${x.getFullYear()}-${pad2(x.getMonth()+1)}-${pad2(x.getDate())}`;
+  if (r.period === "daily") { d.setDate(d.getDate() + 1); return fmt(d); }
+  if (r.period === "weekly") {
+    for (let i = 1; i <= 7; i++) { const t = new Date(d); t.setDate(t.getDate() + i); if (t.getDay() === r.dow % 7) return fmt(t); }
+    return from;
+  }
+  if (r.period === "monthly") {
+    const y = d.getFullYear(), m = d.getMonth();
+    const last = new Date(y, m + 2, 0).getDate();
+    const dom = Math.min(r.dom, last);
+    return fmt(new Date(y, m + 1, dom));
+  }
+  return from;
+}
+/* 打开应用时补记到期周期记录 */
+async function runRecurring() {
+  const list = SET.recurrings || [];
+  const today = nowStr().slice(0, 10);
+  let created = 0, changed = false;
+  for (const r of list) {
+    if (!r.active || !r.nextDate) continue;
+    let guard = 0;
+    while (r.nextDate <= today && guard < 62) {
+      await dbAdd({
+        id: uid(),
+        type: r.type,
+        date: r.nextDate + " 00:00",
+        cat1: r.cat1 || "其他", cat2: r.cat2 || "周期记账",
+        amount: r.amount,
+        account: r.account,
+        toAccount: r.type === "transfer" ? r.toAccount : "",
+        remark: r.remark || "周期记账",
+        createdAt: Date.now(),
+      });
+      r.nextDate = nextRunDate(r, r.nextDate);
+      created++; guard++; changed = true;
+    }
+  }
+  if (changed) { saveSettings(SET); await refreshCache(); }
+  if (created) {
+    toast(`已自动记账 ${created} 笔周期记录`);
+    renderBook(); renderList(); renderStat(); renderMine(); updateTopbar();
+  }
+}
+/* 周期记账管理列表 */
+function openRecurringModal() {
+  const list = (SET.recurrings || []).map((r, i) => {
+    const badgeCls = r.type === "expense" ? "exp" : r.type === "income" ? "inc" : "";
+    const title = `${TYPE_LABEL[r.type]} ${fmtMoney(r.amount)}`;
+    const sub = `${periodDesc(r)} ｜ ${r.type === "transfer" ? `${acctById(r.account).name} → ${acctById(r.toAccount).name}` : `${r.cat1}/${r.cat2}`} ｜ 下次 ${r.nextDate || "未定"}`;
+    return `<div class="rl-row">
+      <span class="rl-badge ${badgeCls}" style="background:${badgeCls === "exp" ? "var(--primary-soft)" : badgeCls === "inc" ? "rgba(24,128,56,.1)" : "rgba(0,0,0,.05)"};color:${badgeCls === "exp" ? "var(--expense)" : badgeCls === "inc" ? "var(--income)" : "var(--text2)"};">${r.type === "expense" ? "支" : r.type === "income" ? "收" : "转"}</span>
+      <div class="rl-main">
+        <div class="rl-title">${title} <span style="font-size:10.5px;color:var(--text2);font-weight:400;">${r.active ? "" : "（已暂停）"}</span></div>
+        <div class="rl-sub">${sub}</div>
+      </div>
+      <div class="rl-actions">
+        <button class="${r.active ? "on" : "off"}" data-tg="${i}">${r.active ? "启用" : "暂停"}</button>
+        <button class="on" data-ed="${i}">编辑</button>
+        <button class="off" data-del="${i}">删除</button>
+      </div>
+    </div>`;
+  }).join("");
+  openModal("周期记账",
+    `<div style="max-height:320px;overflow-y:auto;">${list || "<div style='padding:16px;text-align:center;color:var(--text2);font-size:12px;line-height:1.7;'>暂无周期规则<br>点击下方「新增规则」开始</div>"}</div>
+     <button id="addRecBtn" style="width:100%;margin-top:12px;padding:11px;border-radius:12px;background:var(--primary-soft);color:var(--primary);font-weight:700;border:1px dashed rgba(46,125,50,.4);">＋ 新增规则</button>`,
+    "关闭", "",
+    () => {});
+  document.querySelectorAll("[data-tg]").forEach(b => { b.onclick = () => { toggleRecur(b.dataset.tg); }; });
+  document.querySelectorAll("[data-ed]").forEach(b => { b.onclick = () => { closeModal(); openRecurForm(+b.dataset.ed); }; });
+  document.querySelectorAll("[data-del]").forEach(b => { b.onclick = () => delRecur(b.dataset.del); });
+  const ab = $("addRecBtn"); if (ab) ab.onclick = () => { closeModal(); openRecurForm(); };
+}
+function toggleRecur(i) {
+  const r = (SET.recurrings || [])[+i];
+  if (!r) return;
+  r.active = !r.active;
+  saveSettings(SET);
+  toast(r.active ? "周期规则已启用" : "周期规则已暂停");
+  openRecurringModal();
+}
+function delRecur(i) {
+  const r = (SET.recurrings || [])[+i];
+  if (!r) return;
+  openModal("删除周期规则",
+    `<div class="rec-info">${TYPE_LABEL[r.type]} ${fmtMoney(r.amount)}（${periodDesc(r)}）</div>
+     <div class="tip">删除后不再自动记账，已生成的记录保留。</div>`,
+    "删除", "danger",
+    () => {
+      SET.recurrings.splice(+i, 1);
+      saveSettings(SET);
+      toast("周期规则已删除");
+      openRecurringModal();
+    });
+}
+/* 周期规则表单（新建 / 编辑） */
+function openRecurForm(idx) {
+  const src = idx >= 0 ? (SET.recurrings || [])[idx] : null;
+  const rf = {
+    type: src ? src.type : "expense",
+    amount: src ? src.amount : "",
+    cat1: src ? src.cat1 : "餐饮", cat2: src ? src.cat2 : "午餐",
+    account: src ? src.account : "cash", toAccount: src ? src.toAccount : "deposit",
+    period: src ? src.period : "monthly",
+    dow: src ? src.dow : 1, dom: src ? src.dom : 1,
+    startDate: src ? src.startDate : nowStr().slice(0, 10),
+    remark: src ? src.remark : "",
+  };
+  const typeSeg = `<div class="seg" id="rfType" style="display:flex;background:var(--bg);border-radius:12px;padding:3px;gap:2px;">
+      ${["expense","income","transfer"].map(t => `<button data-t="${t}" style="flex:1;padding:8px 0;border-radius:9px;font-size:13px;font-weight:700;border:none;background:${rf.type === t ? "var(--primary)" : "transparent"};color:${rf.type === t ? "#fff" : "var(--text2)"};">${TYPE_LABEL[t]}</button>`).join("")}
+    </div>`;
+  const periodSeg = `<div class="seg" id="rfPeriod" style="display:flex;background:var(--bg);border-radius:12px;padding:3px;gap:2px;">
+      ${["daily","weekly","monthly"].map(p => `<button data-p="${p}" style="flex:1;padding:8px 0;border-radius:9px;font-size:13px;font-weight:700;border:none;background:${rf.period === p ? "var(--primary)" : "transparent"};color:${rf.period === p ? "#fff" : "var(--text2)"};">${PERIOD_CN[p]}</button>`).join("")}
+    </div>`;
+  openModal(src ? "编辑周期规则" : "新增周期规则",
+    `<div class="rf-label">类型</div>${typeSeg}
+     <div class="rf-label">金额（定值）</div>
+     <input id="rfAmount" type="number" inputmode="decimal" placeholder="0.00" value="${rf.amount}" style="width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--bg);font-size:16px;font-weight:700;color:var(--text);box-sizing:border-box;">
+     <div id="rfCatAcc"></div>
+     <div class="rf-label">周期</div>${periodSeg}
+     <div id="rfWhen" style="display:none;"></div>
+     <div class="rf-label">开始日期</div>
+     <input id="rfStart" type="date" value="${rf.startDate}" style="width:100%;padding:9px 10px;border-radius:10px;border:1px solid var(--border);background:var(--bg);font-size:14px;color:var(--text);box-sizing:border-box;">
+     <div class="rf-label">备注（可选）</div>
+     <input id="rfRemark" type="text" maxlength="30" placeholder="周期记账" value="${rf.remark}" style="width:100%;padding:9px 10px;border-radius:10px;border:1px solid var(--border);background:var(--bg);font-size:14px;color:var(--text);box-sizing:border-box;">
+     <div class="tip">周期规则在<b>打开应用时</b>自动补记到期记录</div>`,
+    "保存", "primary",
+    () => {
+      const amt = Math.round((parseFloat($("rfAmount").value) || 0) * 100) / 100;
+      if (!(amt > 0)) { toast("请输入有效金额"); return; }
+      const rec = {
+        id: src ? src.id : "r_" + Date.now().toString(36),
+        type: rf.type,
+        amount: amt,
+        cat1: rf.type === "transfer" ? "转账" : $("rfCat1").value,
+        cat2: rf.type === "transfer" ? "账户间" : $("rfCat2").value,
+        account: $("rfAcc").value,
+        toAccount: rf.type === "transfer" ? $("rfToAcc").value : "",
+        period: rf.period,
+        dow: rf.period === "weekly" ? +$("rfDow").value : 1,
+        dom: rf.period === "monthly" ? +$("rfDom").value : 1,
+        startDate: $("rfStart").value || nowStr().slice(0, 10),
+        remark: $("rfRemark").value.trim(),
+        active: src ? src.active : true,
+        nextDate: src ? src.nextDate : null,
+      };
+      if (!rec.nextDate) rec.nextDate = nextRunDate(rec, rec.startDate);
+      if (idx >= 0) (SET.recurrings || [])[idx] = rec; else (SET.recurrings || []).push(rec);
+      saveSettings(SET);
+      toast(src ? "周期规则已更新" : "周期规则已创建");
+      openRecurringModal();
+    });
+  /* 分类/账户区：按当前类型就地构建（类型切换不重建表单，保留状态） */
+  function buildCatAcc() {
+    const box = $("rfCatAcc");
+    const cats1 = CATEGORIES.filter(c => (rf.type === "income" ? c.id === "income" : c.id !== "income"));
+    const curCat = cats1.find(c => c.name === rf.cat1) || cats1[0];
+    if (rf.type === "transfer") {
+      box.innerHTML = `
+        <div class="rf-label">转出 → 转入</div>
+        <div class="rf-grid">
+          <select id="rfAcc">${accounts().map(a => `<option value="${a.id}" ${a.id === rf.account ? "selected" : ""}>${a.name}</option>`).join("")}</select>
+          <select id="rfToAcc">${accounts().filter(a => a.id !== rf.account).map(a => `<option value="${a.id}" ${a.id === rf.toAccount ? "selected" : ""}>${a.name}</option>`).join("")}</select>
+        </div>`;
+      $("rfAcc").onchange = e => {
+        const v = e.target.value;
+        const other = accounts().find(a => a.id !== v);
+        $("rfToAcc").innerHTML = accounts().filter(a => a.id !== v).map(a => `<option value="${a.id}">${a.name}</option>`).join("");
+        if (other) rf.toAccount = other.id;
+      };
+    } else {
+      box.innerHTML = `
+        <div class="rf-label">分类</div>
+        <div class="rf-grid">
+          <select id="rfCat1">${cats1.map(c => `<option ${c.name === rf.cat1 ? "selected" : ""}>${c.name}</option>`).join("")}</select>
+          <select id="rfCat2">${curCat.subs.map(s => `<option ${s === rf.cat2 ? "selected" : ""}>${s}</option>`).join("")}</select>
+        </div>
+        <div class="rf-label">账户</div>
+        <select id="rfAcc" style="width:100%;padding:9px 10px;border-radius:10px;border:1px solid var(--border);background:var(--bg);font-size:14px;color:var(--text);">${accounts().map(a => `<option value="${a.id}" ${a.id === rf.account ? "selected" : ""}>${a.name}</option>`).join("")}</select>`;
+      $("rfCat1").onchange = e => {
+        const c = CATEGORIES.find(x => x.name === e.target.value);
+        rf.cat1 = e.target.value;
+        $("rfCat2").innerHTML = c.subs.map(s => `<option ${s === rf.cat2 ? "selected" : ""}>${s}</option>`).join("");
+      };
+      $("rfCat2").onchange = e => { rf.cat2 = e.target.value; };
+      $("rfAcc").onchange = e => { rf.account = e.target.value; };
+    }
+  }
+  buildCatAcc();
+  /* 表单内联动 */
+  document.querySelectorAll("#rfType button").forEach(b => { b.onclick = () => {
+    rf.type = b.dataset.t;
+    document.querySelectorAll("#rfType button").forEach(x => {
+      const on = x.dataset.t === rf.type;
+      x.style.background = on ? "var(--primary)" : "transparent";
+      x.style.color = on ? "#fff" : "var(--text2)";
+    });
+    buildCatAcc();
+  }; });
+  document.querySelectorAll("#rfPeriod button").forEach(b => { b.onclick = () => {
+    rf.period = b.dataset.p;
+    renderRfWhen();
+  }; });
+  $("rfCat1").onchange = e => {
+    const c = CATEGORIES.find(x => x.name === e.target.value);
+    $("rfCat2").innerHTML = c.subs.map(s => `<option>${s}</option>`).join("");
+  };
+  $("rfAcc").onchange = e => {
+    if (rf.type === "transfer") {
+      const v = e.target.value;
+      const other = accounts().find(a => a.id !== v);
+      $("rfToAcc").innerHTML = accounts().filter(a => a.id !== v).map(a => `<option value="${a.id}" ${a.id === rf.toAccount ? "selected" : ""}>${a.name}</option>`).join("");
+      rf.toAccount = other ? other.id : "";
+    }
+  };
+  function renderRfWhen() {
+    const box = $("rfWhen");
+    if (rf.period === "weekly") {
+      box.style.display = "block";
+      box.innerHTML = `<div class="rf-label">每周</div><select id="rfDow" style="width:100%;padding:9px;border-radius:10px;border:1px solid var(--border);background:var(--bg);font-size:14px;color:var(--text);">${DOW_CN.map((d, i) => `<option value="${i}" ${(rf.dow || 1) % 7 === i ? "selected" : ""}>${d}</option>`).join("")}</select>`;
+    } else if (rf.period === "monthly") {
+      box.style.display = "block";
+      box.innerHTML = `<div class="rf-label">每月</div><select id="rfDom" style="width:100%;padding:9px;border-radius:10px;border:1px solid var(--border);background:var(--bg);font-size:14px;color:var(--text);">${Array.from({length:31}, (_, i) => i + 1).map(n => `<option ${n === rf.dom ? "selected" : ""}>${n}</option>`).join("")}</select>`;
+    } else box.style.display = "none";
+  }
+  renderRfWhen();
+}
+$("btnRecurring").onclick = openRecurringModal;
 
 /* =====================================================================
  * Tab 切换
@@ -2179,6 +2520,7 @@ async function refreshCache() { CACHE = await dbAll(); }
     renderStat();
     renderMine();
     updateTopbar();
+    await runRecurring();   // 打开时补记到期周期记录（在初始渲染之后，避免覆盖）
   } catch (err) {
     console.error(err);
     toast("存储初始化失败：" + err.message);
