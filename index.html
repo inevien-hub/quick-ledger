@@ -300,6 +300,7 @@ main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px;
 .legend-item .nm{flex:1;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .legend-item .amt{font-variant-numeric:tabular-nums;font-weight:700;}
 .legend-item .pct{color:var(--text2);min-width:40px;text-align:right;font-variant-numeric:tabular-nums;}
+.legend-empty{font-size:11.5px;color:var(--text2);line-height:1.6;padding:6px 0;}
 .chart{width:100%;height:auto;}
 .axis-label{font-size:9px;fill:var(--text2);}
 .legend-row{display:flex;gap:16px;margin-top:8px;font-size:11.5px;color:var(--text2);}
@@ -649,6 +650,14 @@ main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px;
       <div class="stat-title"><span data-ic="exchange"></span>年度对比<span class="stat-sub">本年 vs 上年</span></div>
       <div id="statYear"></div>
       <div class="legend-row" id="yearLegend"></div>
+    </div>
+
+    <div class="bento stat-card">
+      <div class="stat-title"><span data-ic="wallet"></span>账户金额占比<span class="stat-sub">当前余额分布</span></div>
+      <div class="donut-body">
+        <div id="accDonut"></div>
+        <div id="accLegend"></div>
+      </div>
     </div>
   </section>
 
@@ -1497,22 +1506,22 @@ function monthLabelsBetween(from, to) {
 }
 
 /* 环形图（stroke-dasharray 实现） */
-function donutSVG(items, total) {
+function donutSVG(items, total, label = "总支出", emptyText = "暂无支出", colors = PIE_COLORS) {
   const r = 52, cx = 65, cy = 65, C = 2 * Math.PI * r;
   const track = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--chart-track)" stroke-width="20"/>`;
   if (!items.length || total <= 0) {
-    return `<svg viewBox="0 0 130 130" class="donut">${track}<text x="65" y="62" text-anchor="middle" class="donut-empty">暂无支出</text></svg>`;
+    return `<svg viewBox="0 0 130 130" class="donut">${track}<text x="65" y="62" text-anchor="middle" class="donut-empty">${emptyText}</text></svg>`;
   }
   let segs = "", offset = 0;
   items.forEach((it, i) => {
     const frac = it.value / total;
     const len = Math.max(frac * C - 2, 0.5);
-    segs += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${PIE_COLORS[i % PIE_COLORS.length]}" stroke-width="20" stroke-dasharray="${len} ${C - len}" stroke-dashoffset="${-offset}" transform="rotate(-90 ${cx} ${cy})"/>`;
+    segs += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${colors[i % colors.length]}" stroke-width="20" stroke-dasharray="${len} ${C - len}" stroke-dashoffset="${-offset}" transform="rotate(-90 ${cx} ${cy})"/>`;
     offset += frac * C;
   });
   return `<svg viewBox="0 0 130 130" class="donut">${track}${segs}
     <text x="65" y="60" text-anchor="middle" class="donut-total">¥${fmtShort(total)}</text>
-    <text x="65" y="77" text-anchor="middle" class="donut-label">总支出</text></svg>`;
+    <text x="65" y="77" text-anchor="middle" class="donut-label">${label}</text></svg>`;
 }
 
 /* 折线图（多序列） */
@@ -1619,6 +1628,23 @@ function renderStat() {
     $("statYear").style.display = "none";
     $("yearLegend").style.display = "none";
   }
+  renderStatAccounts();
+}
+
+/* 账户金额占比环形图（当前余额分布，不随统计月份/范围变化） */
+function renderStatAccounts() {
+  const items = accounts().map(a => ({ name: a.name, value: balanceOf(a.id), color: a.acc }))
+    .filter(x => x.value > 0)
+    .sort((x, y) => y.value - x.value);
+  const total = items.reduce((s, x) => s + x.value, 0);
+  $("accDonut").innerHTML = donutSVG(items, total, "总资产", "暂无余额", items.map(x => x.color));
+  $("accLegend").innerHTML = items.length
+    ? items.map((it, i) =>
+        `<div class="legend-item"><span class="dot" style="background:${it.color}"></span>
+         <span class="nm">${it.name}</span><span class="amt">${fmtMoney(it.value)}</span>
+         <span class="pct">${total ? (it.value / total * 100).toFixed(1) : "0.0"}%</span></div>`
+      ).join("")
+    : `<div class="legend-empty">暂无余额（可在「我的」页点击账户设置初始余额）</div>`;
 }
 
 /* 统计范围切换 */
