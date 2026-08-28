@@ -322,6 +322,19 @@ main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px;
 .mine-item .arrow svg{width:15px;height:15px;}
 /* 账户 Bento 网格 */
 #acctGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px 12px 14px;}
+/* 总资产汇总卡（我的账户顶部） */
+.total-asset{
+  margin:12px 12px 0;border-radius:18px;padding:16px 18px;
+  background:linear-gradient(135deg,var(--primary),var(--primary-2));color:#fff;
+  display:flex;flex-direction:column;gap:5px;position:relative;overflow:hidden;
+  box-shadow:0 4px 14px rgba(46,125,50,.18);
+}
+.total-asset::after{content:"";position:absolute;right:-30px;top:-30px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.12);}
+.total-asset .ta-lb{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;opacity:.92;position:relative;}
+.total-asset .ta-lb svg{width:15px;height:15px;}
+.total-asset .ta-val{font-size:28px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:.5px;position:relative;}
+.total-asset .ta-val.neg{color:#ffe0d6;}
+.total-asset .ta-sub{font-size:11px;opacity:.85;position:relative;}
 .acct-card{
   background:var(--card);border-radius:var(--r-lg);border:1px solid var(--border);
   box-shadow:var(--shadow-soft);padding:14px;text-align:left;
@@ -629,6 +642,11 @@ main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px;
     <div id="mineList">
       <div class="mine-group">
         <div class="title">我的账户 · 点击设置初始余额</div>
+        <div class="total-asset">
+          <div class="ta-lb"><span data-ic="wallet"></span>总资产</div>
+          <div class="ta-val" id="totalAssetVal">¥0.00</div>
+          <div class="ta-sub" id="totalAssetSub">现金 · 存款 · 黄金 · 外汇</div>
+        </div>
         <div id="acctGrid"></div>
       </div>
       <div class="mine-group">
@@ -1873,6 +1891,12 @@ $("btnExport").onclick = exportCSV;
  * 我的页（账户 Bento 余额卡）
  * ===================================================================== */
 function renderMine() {
+  // 总资产汇总（四账户余额之和）
+  const total = ACCOUNTS.reduce((s, a) => s + balanceOf(a.id), 0);
+  const tv = $("totalAssetVal");
+  if (tv) { tv.textContent = fmtMoney(total); tv.className = "ta-val" + (total < 0 ? " neg" : ""); }
+  const ts = $("totalAssetSub");
+  if (ts) ts.textContent = ACCOUNTS.map(a => a.name).join(" · ");
   const grid = $("acctGrid");
   grid.innerHTML = "";
   ACCOUNTS.forEach(a => {
