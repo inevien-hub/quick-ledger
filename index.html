@@ -64,13 +64,13 @@ main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px;
 
 /* ========== 记账页 · 预算进度条（M3） ========== */
 .budget-bar{
-  margin-bottom:8px;padding:8px 12px 9px;display:none;
+  margin-bottom:6px;padding:6px 12px 7px;display:none;
   background:var(--card);border-radius:14px;border:1px solid var(--border);box-shadow:var(--shadow-soft);
 }
 .budget-bar.show{display:block;}
 .b-row{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--text2);font-weight:600;}
 .b-row b{color:var(--primary);font-weight:800;font-variant-numeric:tabular-nums;}
-.b-track{height:6px;background:var(--primary-soft);border-radius:3px;margin-top:6px;overflow:hidden;}
+.b-track{height:5px;background:var(--primary-soft);border-radius:3px;margin-top:5px;overflow:hidden;}
 .b-fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--primary-2));border-radius:3px;transition:width .3s;}
 .budget-bar.over .b-fill{background:var(--expense);}
 .budget-bar.over .b-row b{color:var(--expense);}
@@ -93,7 +93,7 @@ main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px;
 .bento-card.small .b-val{font-size:17px;}
 
 /* ========== 类型 + 账户 ========== */
-#type-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+#type-row{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
 #type-row .seg{display:flex;background:var(--card);border-radius:12px;box-shadow:var(--shadow-soft);border:1px solid var(--border);overflow:hidden;padding:3px;}
 #type-row .seg button{padding:6px 13px;font-size:13.5px;font-weight:700;color:var(--text2);border-radius:9px;}
 #type-row .seg button.on{background:var(--primary);color:#fff;}
@@ -124,43 +124,55 @@ main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px;
 #transToRow .chips button.on{border-color:var(--primary);background:var(--primary-soft);color:var(--primary);}
 #transToRow .chips svg{width:15px;height:15px;}
 
-/* ========== 常用分类（横向滑动单行，一屏内省高度） ========== */
-#catGrid{
-  display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin-bottom:8px;
+/* ========== 分类区（两行：第一行分类组 / 第二行子类） ========== */
+#catGrid{display:block;margin-bottom:6px;}
+#catGroupRow{
+  display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-bottom:6px;
   padding-bottom:2px;-webkit-overflow-scrolling:touch;
 }
-#catGrid::-webkit-scrollbar{display:none;}
+#catGroupRow::-webkit-scrollbar{display:none;}
+.grp-chip{
+  flex-shrink:0;padding:5px 12px;border-radius:9px;font-size:12.5px;font-weight:700;
+  background:var(--card);border:1px solid var(--border);color:var(--text2);white-space:nowrap;
+  box-shadow:var(--shadow-soft);
+}
+.grp-chip.on{background:var(--primary);border-color:var(--primary);color:#fff;box-shadow:none;}
+#catSubRow{
+  display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;
+  padding-bottom:2px;-webkit-overflow-scrolling:touch;
+}
+#catSubRow::-webkit-scrollbar{display:none;}
 .cat-btn{
-  flex-shrink:0;width:64px;min-height:58px;display:flex;flex-direction:column;align-items:center;gap:4px;
+  flex-shrink:0;width:58px;min-height:52px;display:flex;flex-direction:column;align-items:center;gap:3px;
   background:var(--card);border-radius:var(--r-md);border:1px solid var(--border);
-  box-shadow:var(--shadow-soft);padding:8px 2px;justify-content:center;
+  box-shadow:var(--shadow-soft);padding:6px 2px;justify-content:center;
   border-top:3px solid transparent;
 }
 .cat-btn .cic{
-  width:30px;height:30px;border-radius:10px;background:var(--primary-soft);
+  width:27px;height:27px;border-radius:9px;background:var(--primary-soft);
   display:flex;align-items:center;justify-content:center;color:var(--primary);
 }
-.cat-btn .cic svg{width:15px;height:15px;}
+.cat-btn .cic svg{width:14px;height:14px;}
 .cat-btn .nm{font-size:10.5px;color:var(--text);font-weight:600;white-space:nowrap;}
 /* 更多（横向小格） */
 .cat-btn.more-all{
-  width:56px;min-height:58px;flex-direction:column;justify-content:center;gap:4px;
+  width:52px;min-height:52px;flex-direction:column;justify-content:center;gap:3px;
   border-radius:var(--r-md);background:var(--primary-soft);
-  border:1.5px dashed rgba(46,125,50,.35);box-shadow:none;padding:8px 2px;
+  border:1.5px dashed rgba(46,125,50,.35);box-shadow:none;padding:6px 2px;
 }
-.cat-btn.more-all .cic{background:#fff;color:var(--primary);width:30px;height:30px;border-radius:10px;}
+.cat-btn.more-all .cic{background:#fff;color:var(--primary);width:27px;height:27px;border-radius:9px;}
 .cat-btn.more-all .nm{color:var(--primary);font-size:10.5px;font-weight:700;}
 .cat-btn.on{border-top:3px solid var(--primary);background:var(--primary-soft);}
 .cat-btn.on .nm{color:var(--primary);font-weight:800;}
 
 /* ========== 金额 ========== */
 #amountBox{
-  margin-top:8px;background:var(--card);border-radius:var(--r-lg);border:1px solid var(--border);
-  box-shadow:var(--shadow-soft);padding:5px 14px 7px;text-align:right;position:relative;overflow:hidden;
+  margin-top:6px;background:var(--card);border-radius:var(--r-lg);border:1px solid var(--border);
+  box-shadow:var(--shadow-soft);padding:4px 14px 5px;text-align:right;position:relative;overflow:hidden;
 }
 #amountBox::before{content:"";position:absolute;left:0;top:0;right:0;height:3px;background:linear-gradient(90deg,var(--primary),var(--primary-2));}
 #exprText{font-size:11px;color:var(--text2);min-height:14px;font-variant-numeric:tabular-nums;}
-#amountBox .amt{font-size:34px;font-weight:800;letter-spacing:1px;line-height:1.25;font-variant-numeric:tabular-nums;}
+#amountBox .amt{font-size:30px;font-weight:800;letter-spacing:1px;line-height:1.2;font-variant-numeric:tabular-nums;}
 #amountBox .amt.exp{color:var(--expense);}
 #amountBox .amt.inc{color:var(--income);}
 
@@ -173,7 +185,7 @@ main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px;
 .date-btn svg{width:13px;height:13px;}
 #remarkRow{
   display:flex;align-items:center;gap:8px;background:var(--card);border-radius:var(--r-md);
-  border:1px solid var(--border);box-shadow:var(--shadow-soft);padding:7px 10px;margin-top:8px;
+  border:1px solid var(--border);box-shadow:var(--shadow-soft);padding:6px 10px;margin-top:6px;
 }
 #remarkRow .ic{color:var(--text2);}
 #remarkRow .ic svg{width:15px;height:15px;}
@@ -187,10 +199,10 @@ main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px;
 #keypad{
   display:grid;grid-template-columns:repeat(4,1fr);gap:7px;
   background:var(--card);border-radius:var(--r-lg);border:1px solid var(--border);
-  box-shadow:var(--shadow-soft);padding:8px;margin-top:8px;
+  box-shadow:var(--shadow-soft);padding:8px;margin-top:6px;
 }
 #keypad button{
-  height:44px;border-radius:11px;font-size:19px;font-weight:700;
+  height:41px;border-radius:11px;font-size:18px;font-weight:700;
   background:var(--bg);color:var(--text);border:1px solid transparent;
 }
 #keypad button:active{background:var(--primary-soft);}
@@ -199,7 +211,7 @@ main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px;
 #keypad button.op .op-ic svg{width:17px;height:17px;}
 #keypad button.save{
   grid-column:span 3;background:linear-gradient(135deg,var(--primary),var(--primary-2));color:#fff;
-  font-size:15px;height:44px;border-radius:12px;
+  font-size:15px;height:41px;border-radius:12px;
   display:flex;align-items:center;justify-content:center;gap:6px;
   box-shadow:0 4px 12px rgba(46,125,50,.25);
 }
@@ -211,6 +223,16 @@ main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px;
   font-size:13px;font-weight:700;border-radius:11px;
 }
 #keypad button.voice-key svg{width:16px;height:16px;}
+/* 小屏自动紧凑（视口高 ≤820：键盘与金额再降一档，保证一屏不滚动） */
+@media (max-height:820px){
+  #keypad button{height:39px;}
+  #keypad button.save{height:39px;}
+  #amountBox .amt{font-size:28px;}
+  #exprText{min-height:12px;}
+  .cat-btn{width:56px;min-height:50px;}
+  .cat-btn .cic{width:26px;height:26px;}
+  #remarkRow{padding:5px 10px;}
+}
 
 /* ========== 明细页 ========== */
 #filterBar{display:flex;gap:8px;margin-bottom:12px;align-items:center;}
@@ -559,7 +581,10 @@ main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px;
       <div class="chips" id="transToChips"></div>
     </div>
 
-    <div id="catGrid"></div>
+    <div id="catGrid">
+      <div id="catGroupRow"></div>
+      <div id="catSubRow"></div>
+    </div>
 
     <div id="amountBox">
       <div id="exprText"></div>
@@ -854,6 +879,54 @@ const INCOME_CATS = [
   ["收入","礼金红包","wallet"],["收入","其他","folder"],
 ];
 
+/* ---------------- 动态常用（近 90 天频次 Top N，不足用固定表补齐） ---------------- */
+const HOT_WINDOW_DAYS = 90;
+const HOT_N = { expense: 10, income: 5 };
+let DYNAMIC_HOT = null;
+const CAT_KEY = (c1, c2) => c1 + "\u0001" + c2;
+
+function hotIconOf(c1, c2, type) {
+  const base = type === "income" ? INCOME_CATS : HOT_CATS;
+  const hit = base.find(h => h[0] === c1 && h[1] === c2);
+  if (hit) return hit[2];
+  const g = CATEGORIES.find(c => c.name === c1);
+  return g ? g.icon : "folder";
+}
+function computeHot(type) {
+  const from = new Date(Date.now() - HOT_WINDOW_DAYS * 864e5);
+  const fromKey = `${from.getFullYear()}-${pad2(from.getMonth() + 1)}-${pad2(from.getDate())}`;
+  const cnt = new Map();
+  (typeof CACHE !== "undefined" ? CACHE : []).forEach(r => {
+    if (r.type !== type || !r.cat1) return;
+    const d = (r.date || "").slice(0, 10);
+    if (!d || d < fromKey) return;
+    const k = CAT_KEY(r.cat1, r.cat2);
+    const e = cnt.get(k) || { n: 0, last: "" };
+    e.n++; if (d > e.last) e.last = d;
+    cnt.set(k, e);
+  });
+  const list = [...cnt.entries()].map(([k, v]) => {
+    const i = k.indexOf("\u0001");
+    return { c1: k.slice(0, i), c2: k.slice(i + 1), n: v.n, last: v.last };
+  });
+  list.sort((a, b) => b.n - a.n || (a.last < b.last ? 1 : a.last > b.last ? -1 : 0));
+  const target = HOT_N[type] || 10;
+  const base = type === "income" ? INCOME_CATS : HOT_CATS;
+  const seen = new Set(list.map(x => CAT_KEY(x.c1, x.c2)));
+  const out = list.slice(0, target).map(x => [x.c1, x.c2, hotIconOf(x.c1, x.c2, type)]);
+  for (const [c1, c2, icn] of base) {
+    if (out.length >= target) break;
+    if (!seen.has(CAT_KEY(c1, c2))) out.push([c1, c2, icn]);
+  }
+  return out;
+}
+function hotCats() {
+  const type = S.type === "income" ? "income" : "expense";
+  if (!DYNAMIC_HOT) DYNAMIC_HOT = {};
+  if (!DYNAMIC_HOT[type]) DYNAMIC_HOT[type] = computeHot(type);
+  return DYNAMIC_HOT[type];
+}
+
 const TYPE_LABEL = { expense:"支出", income:"收入", transfer:"转账" };
 
 /* ---------------- IndexedDB 封装 ---------------- */
@@ -916,7 +989,7 @@ const S = {
   type: "expense",
   account: "cash",
   toAccount: "deposit",
-  cat1: "餐饮", cat2: "午餐",
+  cat1: "餐饮", cat2: "午餐", catGroup: "hot",
   expr: [],
   pendingOp: null,
   amtStr: "",
@@ -1042,13 +1115,14 @@ function renderBook() {
   const isTrans = S.type === "transfer";
   $("transToRow").style.display = isTrans ? "block" : "none";
   // 转账模式隐藏分类区（转账无分类概念，且省出空间保证一屏）
-  $("catGrid").style.display = isTrans ? "none" : "flex";
+  $("catGrid").style.display = isTrans ? "none" : "block";
   const acc = acctById(S.account);
   renderAcctSelect();
   $("acctSelect").value = S.account;
   $("acctIc").innerHTML = ic(acc.icon);
   renderTransToChips();
-  renderCatGrid();
+  renderCatGroups();
+  renderCatSubs();
   renderAmount();
   renderBudgetBar();
   updateDateLabel();
@@ -1080,24 +1154,77 @@ function renderTransToChips() {
   });
 }
 
-/* Bento 分类网格：按类型渲染（支出高频 / 收入高频），末尾全宽「更多分类」 */
-function renderCatGrid() {
-  const grid = $("catGrid");
-  grid.innerHTML = "";
-  const cats = S.type === "income" ? INCOME_CATS : HOT_CATS;
-  cats.forEach(([c1, c2, icn]) => {
+/* ---------------- 分类区：第一行分类组 / 第二行子类 ---------------- */
+function catGroups() {
+  const rest = CATEGORIES
+    .filter(c => (S.type === "income" ? c.id === "income" : c.id !== "income"))
+    .map(c => ({ id: c.id, name: c.name }));
+  return [{ id: "hot", name: "常用" }].concat(rest);
+}
+/* 某组的子类：常用=动态 Top N；其余=分类库 subs */
+function subsOf(gid) {
+  if (gid === "hot") return hotCats().map(([c1, c2, icon]) => ({ c1, c2, icon }));
+  const g = CATEGORIES.find(c => c.id === gid);
+  if (!g) return [];
+  return g.subs.map(s => ({ c1: g.name, c2: s, icon: g.icon }));
+}
+/* 智能选中：点组时，当前分类若不在该组内则自动选中该组第一项 */
+function pickGroup(gid) {
+  S.catGroup = gid;
+  const subs = subsOf(gid);
+  if (subs.length && !subs.some(x => x.c1 === S.cat1 && x.c2 === S.cat2)) {
+    S.cat1 = subs[0].c1; S.cat2 = subs[0].c2;
+  }
+  renderCatGroups();
+  renderCatSubs(true);
+}
+function pickSub(c1, c2) { S.cat1 = c1; S.cat2 = c2; renderCatSubs(); }
+/* 反查组：编辑 / 语音 / 抽屉选完后，两行高亮同步 */
+function syncGroupFromCat() {
+  if (hotCats().some(h => h[0] === S.cat1 && h[1] === S.cat2)) { S.catGroup = "hot"; return; }
+  const g = CATEGORIES.find(c => c.name === S.cat1);
+  S.catGroup = g ? g.id : "hot";
+}
+
+function renderCatGroups() {
+  const row = $("catGroupRow");
+  row.innerHTML = "";
+  catGroups().forEach(g => {
     const b = document.createElement("button");
-    b.className = "cat-btn" + (S.cat1 === c1 && S.cat2 === c2 ? " on" : "");
-    b.innerHTML = `<span class="cic">${ic(icn)}</span><span class="nm">${c2}</span>`;
-    b.onclick = () => { S.cat1 = c1; S.cat2 = c2; renderCatGrid(); };
-    grid.appendChild(b);
+    b.className = "grp-chip" + (S.catGroup === g.id ? " on" : "");
+    b.textContent = g.name;
+    b.onclick = () => pickGroup(g.id);
+    row.appendChild(b);
+  });
+}
+
+function renderCatSubs(scrollToSel) {
+  const row = $("catSubRow");
+  row.innerHTML = "";
+  if (!catGroups().some(g => g.id === S.catGroup)) S.catGroup = "hot";
+  let sel = null;
+  subsOf(S.catGroup).forEach(x => {
+    const on = S.cat1 === x.c1 && S.cat2 === x.c2;
+    const b = document.createElement("button");
+    b.className = "cat-btn" + (on ? " on" : "");
+    b.innerHTML = `<span class="cic">${ic(x.icon)}</span><span class="nm">${x.c2}</span>`;
+    b.onclick = () => pickSub(x.c1, x.c2);
+    row.appendChild(b);
+    if (on) sel = b;
   });
   const more = document.createElement("button");
   more.className = "cat-btn more-all";
   more.innerHTML = `<span class="cic">${ic("more-horizontal")}</span><span class="nm">更多分类</span>`;
   more.onclick = () => openDrawer();
-  grid.appendChild(more);
+  row.appendChild(more);
+  if (scrollToSel) {
+    row.scrollLeft = sel
+      ? Math.max(0, sel.offsetLeft - row.clientWidth / 2 + sel.offsetWidth / 2)
+      : 0;
+  }
 }
+/* 兼容旧调用点 */
+function renderCatGrid() { renderCatGroups(); renderCatSubs(); }
 
 function renderAmount() {
   const v = S.amtStr === "" ? "0.00" : S.amtStr;
@@ -1149,6 +1276,7 @@ document.querySelectorAll("#typeSeg button").forEach(b => {
     S.type = b.dataset.type;
     if (S.type === "income") { S.cat1 = "收入"; S.cat2 = "工资"; S.drawerCat = "收入"; }
     else if (S.type === "expense" && (S.cat1 === "收入" || S.cat1 === "转账")) { S.cat1 = "餐饮"; S.cat2 = "午餐"; S.drawerCat = "餐饮"; }
+    syncGroupFromCat();
     renderBook();
   };
 });
@@ -1196,6 +1324,11 @@ async function doSave() {
   const amt = calcTotal();
   if (!amt || amt <= 0) { toast("请输入金额"); return; }
   if (S.type === "transfer" && S.account === S.toAccount) { toast("转出转入账户不能相同"); return; }
+  /* 兜底：分类意外为空时，自动取当前组第一项（智能选中已保证，这里只做保险） */
+  if (S.type !== "transfer" && !S.cat2) {
+    const subs = subsOf(S.catGroup);
+    if (subs.length) { S.cat1 = subs[0].c1; S.cat2 = subs[0].c2; renderCatGroups(); renderCatSubs(); }
+  }
 
   const rec = {
     id: S.editingId || uid(),
@@ -1343,6 +1476,7 @@ $("btnEditRec").onclick = () => {
   S.account = r.account;
   S.toAccount = r.toAccount || S.toAccount;
   S.cat1 = r.cat1; S.cat2 = r.cat2;
+  syncGroupFromCat();
   S.date = dayKey(r.date);
   S.amtStr = String(r.amount); S.expr = []; S.pendingOp = null;
   S.remark = r.remark || "";
@@ -1407,9 +1541,11 @@ function renderDrawer() {
     b.innerHTML = `<span class="cic">${ic(cur.icon)}</span><span class="nm">${s}</span>`;
     b.onclick = () => {
       S.cat1 = cur.name; S.cat2 = s;
+      syncGroupFromCat();
       closeDrawer();
       $("mask").classList.remove("show");
-      renderCatGrid();
+      renderCatGroups();
+      renderCatSubs(true);
     };
     subs.appendChild(b);
   });
@@ -2569,6 +2705,7 @@ function openVoiceFallback(msg) {
       if (!res) { toast("未识别出金额或分类，请重试"); return; }
       S.type = "expense";
       S.cat1 = res.cat1; S.cat2 = res.cat2;
+      syncGroupFromCat();
       S.amtStr = String(res.amount);
       S.editingId = null; S.editingDate = null;
       renderBook();
@@ -2599,6 +2736,7 @@ async function startVoice() {
       if (!res) { toast(`没听清金额或分类（听到：${text}）`); return; }
       S.type = "expense";
       S.cat1 = res.cat1; S.cat2 = res.cat2;
+      syncGroupFromCat();
       S.amtStr = String(res.amount);
       S.editingId = null; S.editingDate = null;
       renderBook();
@@ -2658,7 +2796,7 @@ function initPWA() {
 /* =====================================================================
  * 初始化
  * ===================================================================== */
-async function refreshCache() { CACHE = await dbAll(); }
+async function refreshCache() { CACHE = await dbAll(); DYNAMIC_HOT = null; }
 (async function init() {
   try {
     initTheme();
